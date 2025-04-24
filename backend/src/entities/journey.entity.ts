@@ -26,8 +26,11 @@ export class Journey {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
-  pickupLocation: string;
+  @Column('json', { nullable: true })
+  pickupLocation: {
+    latitude: number;
+    longitude: number;
+  };
 
   @Column()
   dropoffLocation: string;
@@ -92,12 +95,8 @@ export class Journey {
   @Column({ type: 'integer', nullable: true })
   estimatedDuration: number; // in minutes
 
-  @ManyToOne(() => User, { 
-    nullable: true,
-    onDelete: 'CASCADE'
-  })
-  @JoinColumn({ name: 'driverId' })
-  driver: User;
+  @ManyToOne(() => User, { nullable: true })
+  assignedDriver: User;
 
   @Column({ nullable: true })
   driverId: string;

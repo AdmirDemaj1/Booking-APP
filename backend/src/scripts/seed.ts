@@ -3,35 +3,45 @@ import { User, UserRole, DriverStatus } from '../entities/user.entity';
 import { Vehicle, VehicleStatus } from '../entities/vehicle.entity';
 import { Journey, JourneyStatus, PaymentStatus, PaymentMethod } from '../entities/journey.entity';
 import * as bcrypt from 'bcrypt';
+import * as dotenv from 'dotenv';
+
+// Load environment variables from .env file
+dotenv.config();
+
+console.log('Starting database seed...');
+console.log('Database connection parameters:');
+console.log(`Host: ${process.env.DATABASE_HOST || 'localhost'}`);
+console.log(`Port: ${process.env.DATABASE_PORT || '5432'}`);
+console.log(`Database: ${process.env.DATABASE_NAME || 'booking_api'}`);
+console.log(`User: ${process.env.DATABASE_USER || 'postgres'}`);
 
 async function seed() {
   const dataSource = new DataSource({
     type: 'postgres',
-    host: process.env.DATABASE_HOST || 'localhost',
-    port: parseInt(process.env.DATABASE_PORT || '5432'),
-    username: process.env.DATABASE_USERNAME || 'postgres',
+    host: process.env.DATABASE_HOST || 'db',
+    port: parseInt(process.env.DATABASE_PORT || '5432', 10),
+    username: process.env.DATABASE_USER || 'postgres', // Match the variable name in database.module.ts
     password: process.env.DATABASE_PASSWORD || 'postgres',
     database: process.env.DATABASE_NAME || 'booking_api',
     entities: [User, Vehicle, Journey],
     synchronize: true,
+    logging: true,
   });
 
   try {
+    console.log('Initializing database connection...');
     await dataSource.initialize();
+    console.log('Database connection established successfully');
 
     // Get repositories
     const userRepository = dataSource.getRepository(User);
     const vehicleRepository = dataSource.getRepository(Vehicle);
     const journeyRepository = dataSource.getRepository(Journey);
 
-    // Clean up existing data in the correct order using raw SQL
-    console.log('Cleaning up existing data...');
-    await dataSource.query('TRUNCATE TABLE journeys CASCADE');
-    await dataSource.query('TRUNCATE TABLE vehicles CASCADE');
-    await dataSource.query('TRUNCATE TABLE users CASCADE');
-    console.log('Cleanup completed');
+   
 
     // Create admin user
+    console.log('Creating admin user...');
     const adminPassword = await bcrypt.hash('admin123', 10);
     const admin = await userRepository.save({
       email: 'admin@admin.com',
@@ -42,8 +52,10 @@ async function seed() {
       phoneNumber: '+1234567890',
       isActive: true
     });
+    console.log(`Created admin user with ID: ${admin.id}`);
 
     // Create driver users with Tirana locations
+    console.log('Creating driver users...');
     const drivers = await Promise.all([
       userRepository.save({
         email: 'driver1@example.com',
@@ -106,8 +118,10 @@ async function seed() {
         }
       }),
     ]);
+    console.log(`Created ${drivers.length} driver users`);
 
     // Create vehicles
+    console.log('Creating vehicles...');
     const vehicles = await Promise.all([
       vehicleRepository.save({
         make: 'Toyota',
@@ -117,6 +131,7 @@ async function seed() {
         color: 'Black',
         status: VehicleStatus.ACTIVE,
         driver: drivers[0],
+        driverId: drivers[0].id
       }),
       vehicleRepository.save({
         make: 'Honda',
@@ -126,6 +141,7 @@ async function seed() {
         color: 'White',
         status: VehicleStatus.ACTIVE,
         driver: drivers[1],
+        driverId: drivers[1].id
       }),
       vehicleRepository.save({
         make: 'Ford',
@@ -135,6 +151,7 @@ async function seed() {
         color: 'Blue',
         status: VehicleStatus.ACTIVE,
         driver: drivers[2],
+        driverId: drivers[2].id
       }),
       vehicleRepository.save({
         make: 'Chevrolet',
@@ -144,54 +161,100 @@ async function seed() {
         color: 'Red',
         status: VehicleStatus.ACTIVE,
         driver: drivers[3],
+        driverId: drivers[3].id
       }),
     ]);
+    console.log(`Created ${vehicles.length} vehicles`);
 
     // Create journeys with Tirana locations
-    const locations = [
-      { pickup: 'Skanderbeg Square', dropoff: 'Blloku', coordinates: { pickup: { lat: 41.3275, lng: 19.8187 }, dropoff: { lat: 41.3300, lng: 19.8200 } } },
-      { pickup: 'Tirana International Airport', dropoff: 'City Center', coordinates: { pickup: { lat: 41.4147, lng: 19.7206 }, dropoff: { lat: 41.3275, lng: 19.8187 } } },
-      { pickup: 'Grand Park', dropoff: 'Tirana East Gate', coordinates: { pickup: { lat: 41.3200, lng: 19.8300 }, dropoff: { lat: 41.3400, lng: 19.8500 } } },
-      { pickup: 'Tirana Lake', dropoff: 'Dajti Mountain', coordinates: { pickup: { lat: 41.3350, lng: 19.8400 }, dropoff: { lat: 41.3500, lng: 19.9000 } } },
+    console.log('Creating journeys...');
+    const journeyLocations = [
+      {
+        pickupLocation: 'Skanderbeg Square',
+        dropoffLocation: 'Blloku',
+        pickupCoordinates: { latitude: 41.3275, longitude: 19.8187 },
+        dropoffCoordinates: { latitude: 41.3300, longitude: 19.8200 }
+      },
+      {
+        pickupLocation: 'Tirana International Airport',
+        dropoffLocation: 'City Center',
+        pickupCoordinates: { latitude: 41.4147, longitude: 19.7206 },
+        dropoffCoordinates: { latitude: 41.3275, longitude: 19.8187 }
+      },
+      {
+        pickupLocation: 'Grand Park',
+        dropoffLocation: 'Tirana East Gate',
+        pickupCoordinates: { latitude: 41.3200, longitude: 19.8300 },
+        dropoffCoordinates: { latitude: 41.3400, longitude: 19.8500 }
+      },
+      {
+        pickupLocation: 'Tirana Lake',
+        dropoffLocation: 'Dajti Mountain',
+        pickupCoordinates: { latitude: 41.3350, longitude: 19.8400 },
+        dropoffCoordinates: { latitude: 41.3500, longitude: 19.9000 }
+      },
     ];
 
-    const statuses = [JourneyStatus.PENDING, JourneyStatus.IN_PROGRESS, JourneyStatus.COMPLETED, JourneyStatus.CANCELLED];
+    const statuses = [JourneyStatus.PENDING, JourneyStatus.ASSIGNED, JourneyStatus.IN_PROGRESS, JourneyStatus.COMPLETED, JourneyStatus.CANCELLED];
 
     const journeys: Journey[] = [];
     for (let i = 0; i < 10; i++) {
-      const randomLocation = locations[Math.floor(Math.random() * locations.length)];
+      const randomLocation = journeyLocations[Math.floor(Math.random() * journeyLocations.length)];
       const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
-      const randomVehicle = vehicles[Math.floor(Math.random() * vehicles.length)];
+      const randomDriver = drivers[Math.floor(Math.random() * drivers.length)];
 
-      const journey = await journeyRepository.save({
-        pickupLocation: randomLocation.pickup,
-        dropoffLocation: randomLocation.dropoff,
-        pickupCoordinates: {
-          latitude: randomLocation.coordinates.pickup.lat,
-          longitude: randomLocation.coordinates.pickup.lng
-        },
-        dropoffCoordinates: {
-          latitude: randomLocation.coordinates.dropoff.lat,
-          longitude: randomLocation.coordinates.dropoff.lng
-        },
+      // Only assign driver if not pending or cancelled
+      const shouldAssignDriver = randomStatus !== JourneyStatus.PENDING && randomStatus !== JourneyStatus.CANCELLED;
+      
+      const journeyData: Partial<Journey> = {
+        pickupLocation: randomLocation.pickupCoordinates,
+        dropoffLocation: randomLocation.dropoffLocation,
+        pickupCoordinates: randomLocation.pickupCoordinates,
+        dropoffCoordinates: randomLocation.dropoffCoordinates,
         pickupTime: new Date(),
         passengerName: `Passenger ${i + 1}`,
         passengerPhone: `+123456789${i}`,
         status: randomStatus,
         paymentStatus: PaymentStatus.PENDING,
         paymentMethod: PaymentMethod.CASH,
-        fare: 10.00,
-        driverId: randomVehicle.driver.id
-      });
+        fare: parseFloat((Math.random() * 30 + 10).toFixed(2)), // Random fare between 10 and 40
+        distance: parseFloat((Math.random() * 15).toFixed(2)), // Random distance up to 15km
+        estimatedDuration: Math.floor(Math.random() * 30) + 10, // Random duration between 10-40 minutes
+      };
+
+      // Only add driver info if journey is assigned or beyond
+      if (shouldAssignDriver) {
+        journeyData.driverId = randomDriver.id;
+        journeyData.assignedDriver = randomDriver;
+      }
+
+      // Add actual pickup/dropoff times for in-progress and completed journeys
+      if (randomStatus === JourneyStatus.IN_PROGRESS || randomStatus === JourneyStatus.COMPLETED) {
+        journeyData.actualPickupTime = new Date(Date.now() - Math.floor(Math.random() * 3600000)); // Random time within the last hour
+      }
+      
+      if (randomStatus === JourneyStatus.COMPLETED) {
+        journeyData.dropoffTime = new Date();
+      }
+
+      const journey = await journeyRepository.save(journeyData);
+      console.log(`Created journey with ID: ${journey.id} and status: ${journey.status}`);
       journeys.push(journey);
     }
 
     console.log('Seed data created successfully!');
+    console.log(`Created ${drivers.length} drivers`);
+    console.log(`Created ${vehicles.length} vehicles`);
+    console.log(`Created ${journeys.length} journeys`);
+    
   } catch (error) {
     console.error('Error during seeding:', error);
     throw error;
   } finally {
-    await dataSource.destroy();
+    if (dataSource && dataSource.isInitialized) {
+      await dataSource.destroy();
+      console.log('Database connection closed');
+    }
   }
 }
 

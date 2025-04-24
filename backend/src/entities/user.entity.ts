@@ -62,7 +62,7 @@ export class User {
   @Column({ type: 'jsonb', nullable: true })
   fcmToken: string; // For push notifications
 
-  @OneToMany(() => Journey, journey => journey.driver, { 
+  @OneToMany(() => Journey, journey => journey.assignedDriver, { 
     cascade: ['remove'],
     onDelete: 'CASCADE'
   })

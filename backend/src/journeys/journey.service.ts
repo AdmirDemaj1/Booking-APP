@@ -31,4 +31,8 @@ export class JourneyService {
   async findByDriver(driverId: string): Promise<Journey[]> {
     return this.journeyRepository.find({ where: { driverId } });
   }
+
+  async delete(id: string): Promise<void> {
+    await this.journeyRepository.delete(id);
+  }
 } 

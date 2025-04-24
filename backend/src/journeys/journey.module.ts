@@ -2,10 +2,15 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Journey } from '../entities/journey.entity';
 import { JourneyService } from './journey.service';
+import { JourneyController } from './journey.controller';
+import { DriverAssignmentService } from '../services/driver-assignment.service';
+import { User } from '../entities/user.entity';
+import { Vehicle } from '../entities/vehicle.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Journey])],
-  providers: [JourneyService],
+  imports: [TypeOrmModule.forFeature([Journey, User, Vehicle])],
+  providers: [JourneyService, DriverAssignmentService],
+  controllers: [JourneyController],
   exports: [JourneyService],
 })
 export class JourneyModule {} 
