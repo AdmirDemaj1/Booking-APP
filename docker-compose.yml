@@ -50,7 +50,10 @@ services:
       - /app/node_modules
     environment:
       - VITE_API_URL=http://localhost:3000
+      - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true
+      - FAST_REFRESH=false
+    command: npm run dev -- --host 0.0.0.0 --force
     depends_on:
       - backend
 

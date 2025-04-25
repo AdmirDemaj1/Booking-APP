@@ -15,17 +15,25 @@ interface Driver {
 
 interface Journey {
   id: string;
-  pickupLocation: {
+  pickupLocation?: {
+    latitude: number;
+    longitude: number;
+  };
+  pickupCoordinates?: {
     latitude: number;
     longitude: number;
   };
   status: 'pending' | 'assigned' | 'completed';
   assignedDriverId?: string;
+  driverId?: string;
 }
 
 const mapContainerStyle = {
-  width: '100%',
-  height: '600px'
+  width: '100vw',
+  height: '90vh',
+  position: 'absolute' as const,
+  left: 0,
+  right: 0
 };
 
 const center = {
@@ -95,11 +103,45 @@ const DriverMap: React.FC = () => {
     if (!isAddingJourney || !event.latLng) return;
 
     try {
+      // Calculate a default dropoff location a bit north-east of the pickup point
+      const dropoffLat = event.latLng.lat() + 0.01; // ~1km north
+      const dropoffLng = event.latLng.lng() + 0.01; // ~1km east
+      
+      // Get current time for timestamp fields
+      const currentTime = new Date().toISOString();
+      
       const newJourney = {
+        // Required location fields
         pickupLocation: {
           latitude: event.latLng.lat(),
           longitude: event.latLng.lng()
-        }
+        },
+        pickupCoordinates: {
+          latitude: event.latLng.lat(),
+          longitude: event.latLng.lng()
+        },
+        dropoffLocation: "Default Destination",
+        dropoffCoordinates: {
+          latitude: dropoffLat,
+          longitude: dropoffLng
+        },
+        
+        // Required time field
+        pickupTime: currentTime,
+        
+        // Required passenger info
+        passengerName: "Anonymous Passenger",
+        passengerPhone: "+1234567890",
+        
+        // Required payment info
+        fare: "10.00", // TypeORM will convert to decimal
+        paymentStatus: "pending",
+        paymentMethod: "cash",
+        
+        // Other fields with default values
+        status: "pending",
+        distance: "5.00", // in km
+        estimatedDuration: 15 // in minutes
       };
 
       const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/journeys`, newJourney);
@@ -112,14 +154,31 @@ const DriverMap: React.FC = () => {
   };
 
   console.log("drivers", drivers);
+  console.log("journeyss", journeys);
 
   if (loadError) return <div>Error loading Google Maps: {loadError.message}</div>;
   if (!isLoaded) return <div>Loading maps...</div>;
   if (error) return <div>Error: {error}</div>;
 
   return (
-    <div className="driver-map">
-      <div className="map-controls" style={{ marginBottom: '10px' }}>
+    <div className="driver-map" style={{ 
+      width: '100vw', 
+      height: '100vh', 
+      margin: 0,
+      padding: 0,
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      <div className="map-controls" style={{ 
+        marginBottom: '10px', 
+        position: 'absolute', 
+        top: '10px', 
+        left: '10px', 
+        zIndex: 10,
+        backgroundColor: 'rgba(255,255,255,0.8)',
+        padding: '10px',
+        borderRadius: '4px'
+      }}>
         <button 
           onClick={() => setIsAddingJourney(!isAddingJourney)}
           style={{
@@ -170,19 +229,26 @@ const DriverMap: React.FC = () => {
         ))}
 
         {/* Display Journeys */}
-        {journeys.map((journey) => (
-          <Marker
-            key={journey.id}
-            position={{
-              lat: journey.pickupLocation.latitude,
-              lng: journey.pickupLocation.longitude
-            }}
-            onClick={() => setSelectedJourney(journey)}
-            icon={{
-              url: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
-            }}
-          />
-        ))}
+        {journeys.map((journey) => {
+          // Get coordinates from either pickupLocation or pickupCoordinates
+          const lat = journey.pickupLocation?.latitude || journey.pickupCoordinates?.latitude;
+          const lng = journey.pickupLocation?.longitude || journey.pickupCoordinates?.longitude;
+          
+          // Only render marker if coordinates exist
+          return lat && lng ? (
+            <Marker
+              key={journey.id}
+              position={{
+                lat: lat,
+                lng: lng
+              }}
+              onClick={() => setSelectedJourney(journey)}
+              icon={{
+                url: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+              }}
+            />
+          ) : null;
+        })}
 
         {/* Driver Info Window */}
         {selectedDriver && (
@@ -204,17 +270,17 @@ const DriverMap: React.FC = () => {
         {selectedJourney && (
           <InfoWindow
             position={{
-              lat: selectedJourney.pickupLocation.latitude,
-              lng: selectedJourney.pickupLocation.longitude
+              lat: selectedJourney.pickupLocation?.latitude || selectedJourney.pickupCoordinates?.latitude || 0,
+              lng: selectedJourney.pickupLocation?.longitude || selectedJourney.pickupCoordinates?.longitude || 0
             }}
             onCloseClick={() => setSelectedJourney(null)}
           >
             <div>
               <h3>Journey Details</h3>
               <p>Status: {selectedJourney.status}</p>
-              {selectedJourney.assignedDriverId && (
+              {(selectedJourney.assignedDriverId || selectedJourney.driverId) && (
                 <p>Driver: {
-                  drivers.find(d => d.id === selectedJourney.assignedDriverId)?.firstName || 'Loading...'
+                  drivers.find(d => d.id === (selectedJourney.assignedDriverId || selectedJourney.driverId))?.firstName || 'Loading...'
                 }</p>
               )}
             </div>
