@@ -27,4 +27,8 @@ export class VehicleService {
     await this.vehicleRepository.update(id, vehicleData);
     return this.findOne(id);
   }
+
+  async delete(id: string): Promise<void> {
+    await this.vehicleRepository.delete(id);
+  }
 } 

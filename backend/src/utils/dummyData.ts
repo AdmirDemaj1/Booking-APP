@@ -71,7 +71,10 @@ export const generateDummyJourneys = (count: number, drivers: User[], vehicles: 
     const distance = Math.random() * 20 + 5; // Random distance between 5-25 km
 
     journeys.push({
-      pickupLocation: locations[pickupIndex].name,
+      pickupLocation: {
+        latitude: locations[pickupIndex].lat,
+        longitude: locations[pickupIndex].lng
+      },
       dropoffLocation: locations[dropoffIndex].name,
       pickupCoordinates: {
         latitude: locations[pickupIndex].lat,
