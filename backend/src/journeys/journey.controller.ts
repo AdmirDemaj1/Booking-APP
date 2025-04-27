@@ -2,12 +2,16 @@ import { Controller, Get, Post, Put, Delete, Body, Param, Query, NotFoundExcepti
 import { JourneyService } from './journey.service';
 import { Journey, JourneyStatus } from '../entities/journey.entity';
 import { DriverAssignmentService } from '../services/driver-assignment.service';
+import { UnassignedJourneyService } from '../unassigned-journey/unassigned-journey.service'; // 👈
+
 
 @Controller('api/journeys')
 export class JourneyController {
   constructor(
     private readonly journeyService: JourneyService,
-    private readonly driverAssignmentService: DriverAssignmentService
+    private readonly driverAssignmentService: DriverAssignmentService,
+    private readonly unassignedJourneyService: UnassignedJourneyService 
+
   ) {}
 
   @Post()
@@ -31,6 +35,11 @@ export class JourneyController {
       }
       return updatedJourney;
     }
+
+    await this.unassignedJourneyService.create({
+      journeyId: journey.id,
+      reason: 'No available drivers at time of creation'
+    });
     
     // If no driver was assigned, return the journey as is (with PENDING status)
     return journey;

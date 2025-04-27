@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
 import { UserModule } from './user/user.module';
 import { JourneyModule } from './journeys/journey.module';
 import { DatabaseModule } from './database/database.module';
 import { VehicleModule } from './vehicles/vehicle.module';
+import { UnassignedJourneyModule } from './unassigned-journey/unassigned-journey.module';
 
 @Module({
   imports: [
@@ -21,7 +21,8 @@ import { VehicleModule } from './vehicles/vehicle.module';
     DatabaseModule,
     UserModule,
     VehicleModule,
-    JourneyModule
+    JourneyModule,
+    UnassignedJourneyModule
   ],
 })
 export class AppModule {}
