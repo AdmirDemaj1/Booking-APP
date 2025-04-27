@@ -4,10 +4,21 @@ import { useDrivers } from '../../hooks/useDrivers';
 import { useJourneys } from '../../hooks/useJourneys';
 import GoogleMapContainer from './components/GoogleMapContainer';
 import MapControls from './components/MapControls';
+import DriverFormModal from './components/DriverFormModal';
 
 const DriverMapContainer: React.FC = () => {
   const { isLoaded, loadError, onLoad, onUnmount } = useGoogleMaps();
-  const { drivers, selectedDriver, setSelectedDriver, error: driversError } = useDrivers();
+  const { 
+    drivers, 
+    selectedDriver, 
+    setSelectedDriver, 
+    isAddingDriver, 
+    setIsAddingDriver,
+    createDriver,
+    pendingDriverLocation,
+    setPendingDriverLocation,
+    error: driversError 
+  } = useDrivers();
   const { 
     journeys, 
     selectedJourney, 
@@ -19,20 +30,53 @@ const DriverMapContainer: React.FC = () => {
   } = useJourneys();
 
   const toggleAddingJourney = useCallback(() => {
+    if (isAddingDriver) return;
     setIsAddingJourney(!isAddingJourney);
-  }, [isAddingJourney, setIsAddingJourney]);
+  }, [isAddingJourney, setIsAddingJourney, isAddingDriver]);
+
+  const toggleAddingDriver = useCallback(() => {
+    if (isAddingJourney) return;
+    setIsAddingDriver(!isAddingDriver);
+    // Clear any pending driver location when toggling mode
+    if (pendingDriverLocation) {
+      setPendingDriverLocation(null);
+    }
+  }, [isAddingDriver, setIsAddingDriver, isAddingJourney, pendingDriverLocation, setPendingDriverLocation]);
 
   const handleMapClick = useCallback(
     async (event: google.maps.MapMouseEvent) => {
-      if (!isAddingJourney || !event.latLng) return;
+      if (!event.latLng) return;
       
       const latitude = event.latLng.lat();
       const longitude = event.latLng.lng();
       
-      await createJourney(latitude, longitude);
+      if (isAddingJourney) {
+        await createJourney(latitude, longitude);
+      } else if (isAddingDriver) {
+        // Instead of creating immediately, store the location and show modal
+        setPendingDriverLocation({ lat: latitude, lng: longitude });
+      }
     },
-    [isAddingJourney, createJourney]
+    [isAddingJourney, isAddingDriver, createJourney, setPendingDriverLocation]
   );
+
+  const handleDriverFormSubmit = useCallback(
+    async (firstName: string, lastName: string) => {
+      if (pendingDriverLocation) {
+        await createDriver(
+          pendingDriverLocation.lat, 
+          pendingDriverLocation.lng,
+          firstName,
+          lastName
+        );
+      }
+    },
+    [pendingDriverLocation, createDriver]
+  );
+
+  const handleModalClose = useCallback(() => {
+    setPendingDriverLocation(null);
+  }, [setPendingDriverLocation]);
 
   if (loadError) return <div>Error loading Google Maps: {loadError.message}</div>;
   if (!isLoaded) return <div>Loading maps...</div>;
@@ -51,6 +95,8 @@ const DriverMapContainer: React.FC = () => {
       <MapControls 
         isAddingJourney={isAddingJourney}
         toggleAddingJourney={toggleAddingJourney}
+        isAddingDriver={isAddingDriver}
+        toggleAddingDriver={toggleAddingDriver}
       />
 
       <GoogleMapContainer
@@ -64,6 +110,15 @@ const DriverMapContainer: React.FC = () => {
         selectedJourney={selectedJourney}
         setSelectedJourney={setSelectedJourney}
       />
+
+      {pendingDriverLocation && (
+        <DriverFormModal 
+          isOpen={!!pendingDriverLocation} 
+          onClose={handleModalClose}
+          onSubmit={handleDriverFormSubmit}
+          position={pendingDriverLocation}
+        />
+      )}
     </div>
   );
 };
