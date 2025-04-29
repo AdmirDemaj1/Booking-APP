@@ -2,7 +2,7 @@ import { Controller, Post, Get, Delete, Param, Body } from '@nestjs/common';
 import { UnassignedJourneyService } from './unassigned-journey.service';
 import { CreateUnassignedJourneyDto } from './dto/create-unassigned-journey.dto';
 
-@Controller('unassigned-journeys')
+@Controller('api/unassigned-journeys')
 export class UnassignedJourneyController {
   constructor(private readonly service: UnassignedJourneyService) {}
 

@@ -8,7 +8,7 @@ import { CreateUnassignedJourneyDto } from './dto/create-unassigned-journey.dto'
 export class UnassignedJourneyService {
   constructor(
     @InjectRepository(UnassignedJourney)
-    private readonly repo: Repository<UnassignedJourney>
+    private readonly repo: Repository<UnassignedJourney>,
   ) {}
 
   async create(data: CreateUnassignedJourneyDto): Promise<UnassignedJourney> {

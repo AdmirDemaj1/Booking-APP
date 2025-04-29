@@ -17,16 +17,16 @@ export class JourneyController {
   @Post()
   async create(@Body() journeyData: Partial<Journey>): Promise<Journey> {
 
-    console.log("journeyData", journeyData)
+    console.log('journeyData', journeyData);
     // First create the journey with PENDING status
     const journey = await this.journeyService.create({
       ...journeyData,
-      status: JourneyStatus.PENDING
+      status: JourneyStatus.PENDING,
     });
 
     // Try to assign a driver based on the algorithm
     const assigned = await this.driverAssignmentService.assignDriver(journey);
-    
+
     if (assigned) {
       // If driver assignment was successful, refresh the journey to get the updated data
       const updatedJourney = await this.journeyService.findOne(journey.id);

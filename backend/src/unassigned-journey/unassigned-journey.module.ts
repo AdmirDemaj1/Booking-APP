@@ -4,11 +4,10 @@ import { UnassignedJourney } from '../entities/unassigned_journeys.entity';
 import { UnassignedJourneyController } from './unassigned-journey.controller';
 import { UnassignedJourneyService } from './unassigned-journey.service';
 
-
 @Module({
   imports: [TypeOrmModule.forFeature([UnassignedJourney])],
   controllers: [UnassignedJourneyController],
   providers: [UnassignedJourneyService],
-  exports: [UnassignedJourneyService]
+  exports: [UnassignedJourneyService],
 })
 export class UnassignedJourneyModule {}

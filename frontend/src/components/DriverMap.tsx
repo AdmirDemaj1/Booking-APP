@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { GoogleMap, useLoadScript, InfoWindow, Marker } from '@react-google-maps/api';
 import axios from 'axios';
+import useGetUnassignedJourneys from '../hooks/useGetUnassignedJourneys';
 
 interface Driver {
   id: string;
@@ -51,6 +52,14 @@ const DriverMap: React.FC = () => {
   const [isAddingJourney, setIsAddingJourney] = useState(false);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+
+  const {unassignedJourneys, loading, error: unassignedError} = useGetUnassignedJourneys();
+
+  console.log("unassignedJourneys", unassignedJourneys);
+  console.log("loading", loading);
+  console.log("unassignedError", unassignedError);
+  
 
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
