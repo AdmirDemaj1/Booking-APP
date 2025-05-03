@@ -20,11 +20,14 @@ export const useDrivers = () => {
   const [isAddingDriver, setIsAddingDriver] = useState<boolean>(false);
   const [pendingDriverLocation, setPendingDriverLocation] = useState<{lat: number, lng: number} | null>(null);
 
+ 
+
   useEffect(() => {
     const fetchDrivers = async () => {
       try {
         setLoading(true);
         const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/drivers`);
+        console.log("response.data", response.data)
         setDrivers(response.data);
         setError(null);
       } catch (err) {
@@ -43,6 +46,7 @@ export const useDrivers = () => {
   const createDriver = async (latitude: number, longitude: number, firstName: string = "New", lastName: string = "Driver") => {
     try {
       const newDriver = {
+        // id: Date.now().toString(),
         firstName,
         lastName,
         email: `driver${Date.now()}@example.com`,

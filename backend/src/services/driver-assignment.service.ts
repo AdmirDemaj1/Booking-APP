@@ -35,7 +35,7 @@ export class DriverAssignmentService {
   // Calculate driver score based on multiple factors
   private calculateDriverScore(
     driver: User,
-    vehicle: Vehicle,
+    // vehicle?: Vehicle,
     journey: Journey,
     distanceToPickup: number,
   ): number {
@@ -52,9 +52,9 @@ export class DriverAssignmentService {
     score += distanceScore;
 
     // Vehicle status factor
-    if (vehicle.status === VehicleStatus.ACTIVE) {
-      score += 50;
-    }
+    // if (vehicle.status === VehicleStatus.ACTIVE) {
+    //   score += 50;
+    // }
 
     // Driver rating factor (if implemented)
     if (driver['rating']) {
@@ -68,14 +68,14 @@ export class DriverAssignmentService {
     }
 
     // Vehicle capacity factor
-    if (vehicle['capacity'] >= journey['passengerCount']) {
-      score += 30;
-    }
+    // if (vehicle['capacity'] >= journey['passengerCount']) {
+    //   score += 30;
+    // }
 
     return score;
   }
 
-  async findBestDriver(journey: Journey): Promise<{ driver: User; vehicle: Vehicle; score: number } | null> {
+  async findBestDriver(journey: Journey): Promise<{ driver: User; score: number } | null> {
     // Get all available drivers with their vehicles
     const availableDrivers = await this.userRepository.find({
       where: {
@@ -90,13 +90,14 @@ export class DriverAssignmentService {
       return null;
     }
 
-    let bestMatch: { driver: User; vehicle: Vehicle; score: number } | null = null;
+    // let bestMatch: { driver: User; vehicle: Vehicle; score: number } | null = null;
+    let bestMatch: { driver: User; score: number } | null = null;
     let highestScore = 0;
 
     for (const driver of availableDrivers) {
       // Get driver's active vehicle
-      const vehicle = driver.vehicles.find(v => v.status === VehicleStatus.ACTIVE);
-      if (!vehicle) continue;
+      // const vehicle = driver.vehicles.find(v => v.status === VehicleStatus.ACTIVE);
+      // if (!vehicle) continue;
 
       // Calculate distance from driver's current location to pickup point
       const distanceToPickup = this.calculateDistance(
@@ -107,12 +108,14 @@ export class DriverAssignmentService {
       );
 
       // Calculate driver score
-      const score = this.calculateDriverScore(driver, vehicle, journey, distanceToPickup);
+      // const score = this.calculateDriverScore(driver, vehicle, journey, distanceToPickup);
+      const score = this.calculateDriverScore(driver, journey, distanceToPickup);
 
       // Update best match if this driver has a higher score
       if (score > highestScore) {
         highestScore = score;
-        bestMatch = { driver, vehicle, score };
+        // bestMatch = { driver, vehicle, score };
+        bestMatch = { driver, score };
       }
     }
 
@@ -138,9 +141,9 @@ export class DriverAssignmentService {
     });
 
     // Update vehicle status
-    await this.vehicleRepository.update(bestMatch.vehicle.id, {
-      status: VehicleStatus.INACTIVE,
-    });
+    // await this.vehicleRepository.update(bestMatch.vehicle.id, {
+    //   status: VehicleStatus.INACTIVE,
+    // });
 
     return true;
   }

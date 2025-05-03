@@ -14,10 +14,10 @@ import { Vehicle } from '../entities/vehicle.entity';
       password: process.env.DATABASE_PASSWORD || 'postgres',
       database: process.env.DATABASE_NAME || 'booking_api',
       entities: [User, Journey, Vehicle],
-      synchronize: true, // This will create tables automatically
-      logging: true, // Enable SQL logging
+      synchronize: true,
+      logging: ['error', 'warn', 'schema'],
       migrations: ['dist/migrations/*.js'],
-      migrationsRun: true, // Run migrations automatically
+      migrationsRun: true,
     }),
     TypeOrmModule.forFeature([User, Journey, Vehicle]),
   ],

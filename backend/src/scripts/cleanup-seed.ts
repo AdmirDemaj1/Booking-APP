@@ -18,7 +18,7 @@ console.log(`User: ${process.env.DATABASE_USER || 'postgres'}`);
 async function seed() {
   const dataSource = new DataSource({
     type: 'postgres',
-    host: process.env.DATABASE_HOST || 'localhost',
+    host: process.env.DATABASE_HOST || 'db',
     port: parseInt(process.env.DATABASE_PORT || '5432', 10),
     username: process.env.DATABASE_USER || 'postgres', // Match the variable name in database.module.ts
     password: process.env.DATABASE_PASSWORD || 'postgres',
