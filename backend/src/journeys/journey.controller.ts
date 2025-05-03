@@ -1,37 +1,57 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, NotFoundException, HttpCode, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Query,
+  NotFoundException,
+  HttpCode,
+  BadRequestException,
+} from '@nestjs/common';
 import { JourneyService } from './journey.service';
 import { Journey, JourneyStatus } from '../entities/journey.entity';
 import { DriverAssignmentService } from '../services/driver-assignment.service';
+import { UnassignedJourneyService } from '../unassigned-journey/unassigned-journey.service'; // 👈
 
 @Controller('api/journeys')
 export class JourneyController {
   constructor(
     private readonly journeyService: JourneyService,
-    private readonly driverAssignmentService: DriverAssignmentService
+    private readonly driverAssignmentService: DriverAssignmentService,
+    private readonly unassignedJourneyService: UnassignedJourneyService,
   ) {}
 
   @Post()
   async create(@Body() journeyData: Partial<Journey>): Promise<Journey> {
-
-    console.log("journeyData", journeyData)
+    console.log('journeyData', journeyData);
     // First create the journey with PENDING status
     const journey = await this.journeyService.create({
       ...journeyData,
-      status: JourneyStatus.PENDING
+      status: JourneyStatus.PENDING,
     });
 
     // Try to assign a driver based on the algorithm
     const assigned = await this.driverAssignmentService.assignDriver(journey);
-    
+
     if (assigned) {
       // If driver assignment was successful, refresh the journey to get the updated data
       const updatedJourney = await this.journeyService.findOne(journey.id);
       if (!updatedJourney) {
-        throw new NotFoundException(`Journey with ID ${journey.id} not found after driver assignment`);
+        throw new NotFoundException(
+          `Journey with ID ${journey.id} not found after driver assignment`,
+        );
       }
       return updatedJourney;
     }
-    
+
+    await this.unassignedJourneyService.create({
+      journeyId: journey.id,
+      reason: 'No available drivers at time of creation',
+    });
+
     // If no driver was assigned, return the journey as is (with PENDING status)
     return journey;
   }
@@ -42,19 +62,25 @@ export class JourneyController {
     if (!journey) {
       throw new NotFoundException(`Journey with ID ${id} not found`);
     }
-    
+
     if (journey.status !== JourneyStatus.PENDING) {
-      throw new BadRequestException(`Cannot assign driver to journey that is not in PENDING status`);
+      throw new BadRequestException(
+        `Cannot assign driver to journey that is not in PENDING status`,
+      );
     }
-    
+
     const assigned = await this.driverAssignmentService.assignDriver(journey);
     if (!assigned) {
-      throw new BadRequestException(`No available drivers found to assign to this journey`);
+      throw new BadRequestException(
+        `No available drivers found to assign to this journey`,
+      );
     }
-    
+
     const updatedJourney = await this.journeyService.findOne(id);
     if (!updatedJourney) {
-      throw new NotFoundException(`Journey with ID ${id} not found after driver assignment`);
+      throw new NotFoundException(
+        `Journey with ID ${id} not found after driver assignment`,
+      );
     }
     return updatedJourney;
   }
@@ -79,7 +105,10 @@ export class JourneyController {
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Body() journeyData: Partial<Journey>): Promise<Journey> {
+  async update(
+    @Param('id') id: string,
+    @Body() journeyData: Partial<Journey>,
+  ): Promise<Journey> {
     const updatedJourney = await this.journeyService.update(id, journeyData);
     if (!updatedJourney) {
       throw new NotFoundException(`Journey with ID ${id} not found`);
@@ -89,14 +118,14 @@ export class JourneyController {
 
   @Put(':id/status')
   async updateStatus(
-    @Param('id') id: string, 
-    @Body('status') status: JourneyStatus
+    @Param('id') id: string,
+    @Body('status') status: JourneyStatus,
   ): Promise<Journey> {
     const journey = await this.journeyService.findOne(id);
     if (!journey) {
       throw new NotFoundException(`Journey with ID ${id} not found`);
     }
-    
+
     const updatedJourney = await this.journeyService.update(id, { status });
     if (!updatedJourney) {
       throw new NotFoundException(`Journey with ID ${id} not found`);
@@ -113,4 +142,4 @@ export class JourneyController {
     }
     await this.journeyService.delete(id);
   }
-} 
+}

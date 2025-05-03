@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../entities/user.entity';
 import { Journey } from '../entities/journey.entity';
 import { Vehicle } from '../entities/vehicle.entity';
+import { UnassignedJourney } from '../entities/unassigned_journeys.entity';
 
 @Module({
   imports: [
@@ -13,13 +14,20 @@ import { Vehicle } from '../entities/vehicle.entity';
       username: process.env.DATABASE_USER || 'postgres',
       password: process.env.DATABASE_PASSWORD || 'postgres',
       database: process.env.DATABASE_NAME || 'booking_api',
+<<<<<<< HEAD
       entities: [User, Journey, Vehicle],
       synchronize: true,
       logging: ['error', 'warn', 'schema'],
+=======
+      entities: [User, Journey, Vehicle, UnassignedJourney],
+      synchronize: true, // This will create tables automatically
+      logging: true, // Enable SQL logging
+>>>>>>> origin/main
       migrations: ['dist/migrations/*.js'],
       migrationsRun: true,
     }),
-    TypeOrmModule.forFeature([User, Journey, Vehicle]),
+    TypeOrmModule.forFeature([User, Journey, Vehicle, UnassignedJourney]),
+
   ],
   exports: [TypeOrmModule],
 })

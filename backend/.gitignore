@@ -2,6 +2,8 @@
 /dist
 /node_modules
 /build
+.vscode/*.log
+
 
 # Logs
 logs
@@ -11,6 +13,7 @@ pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
+package-lock.json
 
 # OS
 .DS_Store
@@ -51,6 +54,7 @@ pids
 *.pid
 *.seed
 *.pid.lock
+
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json

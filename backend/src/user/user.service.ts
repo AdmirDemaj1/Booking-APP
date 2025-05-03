@@ -54,7 +54,10 @@ export class UserService {
     return this.findOne(id);
   }
 
-  async updateDriverStatus(id: string, status: DriverStatus): Promise<User | null> {
+  async updateDriverStatus(
+    id: string,
+    status: DriverStatus,
+  ): Promise<User | null> {
     await this.userRepository.update(id, { driverStatus: status });
     return this.findOne(id);
   }
@@ -62,4 +65,4 @@ export class UserService {
   async delete(id: string): Promise<void> {
     await this.userRepository.delete(id);
   }
-} 
+}
