@@ -2,6 +2,10 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { GoogleMap, useLoadScript, InfoWindow, Marker } from '@react-google-maps/api';
 import axios from 'axios';
 import useWebSocket from '../hooks/useWebSocket';
+import { UnassignedJourney } from '../types/types'; // Import the type
+import { Link } from 'react-router-dom'; // Import Link for navigation
+import { Alert, AlertTitle, Button, IconButton, Stack } from '@mui/material'; // Import MUI components
+import CloseIcon from '@mui/icons-material/Close'; // Import Close icon
 
 interface Driver {
   id: string;
@@ -53,7 +57,9 @@ const DriverMap: React.FC = () => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const [unassignedJourneys, setUnassignedJourneys] = useState<any[]>([]);
+  // Use the UnassignedJourney type for this state
+  const [unassignedJourneys, setUnassignedJourneys] = useState<UnassignedJourney[]>([]);
+  const [showNotification, setShowNotification] = useState(false); // State to control notification visibility
 
   console.log("unassignedJourneys", unassignedJourneys);
 
@@ -67,11 +73,10 @@ const DriverMap: React.FC = () => {
     setMap(map);
   }, []);
 
-  useWebSocket((newJourney) => {
-
+  useWebSocket((newJourney: UnassignedJourney) => {
     console.log("New unassigned journey received:", newJourney);
-    
     setUnassignedJourneys((prev) => [...prev, newJourney]);
+    setShowNotification(true); // Show notification when a new journey is received
   });
 
   const onUnmount = useCallback(() => {
@@ -165,6 +170,10 @@ const DriverMap: React.FC = () => {
     }
   };
 
+  const handleCloseNotification = () => {
+    setShowNotification(false); // Close the notification
+  };
+
   console.log("drivers", drivers);
   console.log("journeyss", journeys);
 
@@ -173,46 +182,93 @@ const DriverMap: React.FC = () => {
   if (error) return <div>Error: {error}</div>;
 
   return (
-    <div className="driver-map" style={{ 
-      width: '100vw', 
-      height: '100vh', 
-      margin: 0,
-      padding: 0,
-      position: 'relative',
-      overflow: 'hidden'
-    }}>
-      <div className="map-controls" style={{ 
-        marginBottom: '10px', 
-        position: 'absolute', 
-        top: '10px', 
-        left: '10px', 
-        zIndex: 10,
-        backgroundColor: 'rgba(255,255,255,0.8)',
-        padding: '10px',
-        borderRadius: '4px'
-      }}>
-        <button 
-          onClick={() => setIsAddingJourney(!isAddingJourney)}
+    <Stack
+      direction="column"
+      spacing={2}
+      sx={{
+        width: '80vw',
+        height: '80vh',
+        margin: 0,
+        padding: 0,
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Notification Component using MUI Alert */}
+      {showNotification && (
+        <Alert
+          severity="info"
           style={{
-            padding: '8px 16px',
-            backgroundColor: isAddingJourney ? '#ff4444' : '#4CAF50',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
+            position: 'absolute',
+            top: '20px',
+            right: '20px',
+            zIndex: 1000,
           }}
+          action={
+            <>
+              <Link to="/unassigned-journeys" style={{ textDecoration: 'none', marginRight: '10px' }}>
+                <button
+                  style={{
+                    backgroundColor: '#1976d2',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '5px 10px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  View Details
+                </button>
+              </Link>
+              <IconButton
+                size="small"
+                aria-label="close"
+                color="inherit"
+                onClick={handleCloseNotification}
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </>
+          }
+        >
+          <AlertTitle>New Unassigned Journey</AlertTitle>
+          A new unassigned journey is available!
+        </Alert>
+      )}
+
+      <Stack
+        direction="row"
+        spacing={2}
+        sx={{
+          marginBottom: '10px',
+          position: 'absolute',
+          top: '10px',
+          left: '10px',
+          zIndex: 10,
+          backgroundColor: 'rgba(255,255,255,0.8)',
+          padding: '5px',
+          borderRadius: '4px',
+        }}
+      >
+        <Button
+          onClick={() => setIsAddingJourney(!isAddingJourney)}
+         size='small'
+          variant='contained'
         >
           {isAddingJourney ? 'Cancel Journey' : 'Add New Journey'}
-        </button>
+        </Button>
         {isAddingJourney && (
           <p style={{ margin: '10px 0', color: '#666' }}>
             Click on the map to set pickup location
           </p>
         )}
-      </div>
+      </Stack>
 
       <GoogleMap
-        mapContainerStyle={mapContainerStyle}
+        mapContainerStyle={{
+          width: '100%',
+          height: '100%',
+        }}
         center={center}
         zoom={13}
         onLoad={onLoad}
@@ -225,38 +281,37 @@ const DriverMap: React.FC = () => {
             key={driver.id}
             position={{
               lat: driver.currentLocation.latitude,
-              lng: driver.currentLocation.longitude
+              lng: driver.currentLocation.longitude,
             }}
             onClick={() => setSelectedDriver(driver)}
             icon={{
-              url: driver.driverStatus === 'on_trip'
-                ? 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
-                : driver.driverStatus === 'available'
-                ? 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
-                : driver.driverStatus === 'break'
-                ? 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png'
-                : 'http://maps.google.com/mapfiles/ms/icons/grey-dot.png'
+              url:
+                driver.driverStatus === 'on_trip'
+                  ? 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
+                  : driver.driverStatus === 'available'
+                  ? 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
+                  : driver.driverStatus === 'break'
+                  ? 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png'
+                  : 'http://maps.google.com/mapfiles/ms/icons/grey-dot.png',
             }}
           />
         ))}
 
         {/* Display Journeys */}
         {journeys.map((journey) => {
-          // Get coordinates from either pickupLocation or pickupCoordinates
           const lat = journey.pickupLocation?.latitude || journey.pickupCoordinates?.latitude;
           const lng = journey.pickupLocation?.longitude || journey.pickupCoordinates?.longitude;
-          
-          // Only render marker if coordinates exist
+
           return lat && lng ? (
             <Marker
               key={journey.id}
               position={{
                 lat: lat,
-                lng: lng
+                lng: lng,
               }}
               onClick={() => setSelectedJourney(journey)}
               icon={{
-                url: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+                url: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
               }}
             />
           ) : null;
@@ -267,7 +322,7 @@ const DriverMap: React.FC = () => {
           <InfoWindow
             position={{
               lat: selectedDriver.currentLocation.latitude,
-              lng: selectedDriver.currentLocation.longitude
+              lng: selectedDriver.currentLocation.longitude,
             }}
             onCloseClick={() => setSelectedDriver(null)}
           >
@@ -283,7 +338,7 @@ const DriverMap: React.FC = () => {
           <InfoWindow
             position={{
               lat: selectedJourney.pickupLocation?.latitude || selectedJourney.pickupCoordinates?.latitude || 0,
-              lng: selectedJourney.pickupLocation?.longitude || selectedJourney.pickupCoordinates?.longitude || 0
+              lng: selectedJourney.pickupLocation?.longitude || selectedJourney.pickupCoordinates?.longitude || 0,
             }}
             onCloseClick={() => setSelectedJourney(null)}
           >
@@ -291,16 +346,19 @@ const DriverMap: React.FC = () => {
               <h3>Journey Details</h3>
               <p>Status: {selectedJourney.status}</p>
               {(selectedJourney.assignedDriverId || selectedJourney.driverId) && (
-                <p>Driver: {
-                  drivers.find(d => d.id === (selectedJourney.assignedDriverId || selectedJourney.driverId))?.firstName || 'Loading...'
-                }</p>
+                <p>
+                  Driver:{' '}
+                  {drivers.find(
+                    (d) => d.id === (selectedJourney.assignedDriverId || selectedJourney.driverId)
+                  )?.firstName || 'Loading...'}
+                </p>
               )}
             </div>
           </InfoWindow>
         )}
       </GoogleMap>
-    </div>
+    </Stack>
   );
 };
 
-export default DriverMap; 
+export default DriverMap;
