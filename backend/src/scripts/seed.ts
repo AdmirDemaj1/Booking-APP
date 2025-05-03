@@ -118,6 +118,8 @@ async function seed() {
         }
       }),
     ]);
+
+    console.log("drivers", drivers)
     console.log(`Created ${drivers.length} driver users`);
 
     // Create vehicles

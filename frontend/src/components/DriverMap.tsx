@@ -1,3 +1,10 @@
+<<<<<<< HEAD
+import React from 'react';
+import DriverMapContainer from './DriverMap/DriverMapContainer';
+
+const DriverMap: React.FC = () => {
+  return <DriverMapContainer />;
+=======
 import React, { useEffect, useState, useCallback } from 'react';
 import { GoogleMap, useLoadScript, InfoWindow, Marker } from '@react-google-maps/api';
 import axios from 'axios';
@@ -359,6 +366,7 @@ const DriverMap: React.FC = () => {
       </GoogleMap>
     </Stack>
   );
+>>>>>>> origin/main
 };
 
 export default DriverMap;

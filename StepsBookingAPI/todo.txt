@@ -1,0 +1,11 @@
+1- Create Routes for these pages: Map, Unasigned Journeys, Assigned Journeys, Drivers, Bookings
+2- Make a driver free when the estimated time is done from the pickup time (For this we have to use polling, figure out how)
+3- Fix issue with reloading database
+4- Make consistent api endpoints
+
+
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+1- When creating a journey and no driver is available show on ui also the drivers which will be available soon
+2- When a journey accours make sure to consider also the time and date like a prebook.

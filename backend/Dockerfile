@@ -1,29 +1,18 @@
-# Build stage
-FROM node:18-alpine AS build
+# Use a Node.js base image
+FROM node:18
 
-WORKDIR /usr/src/app
-
-COPY package*.json ./
-
-RUN npm install
-
-COPY . .
-
-RUN npm run build
-
-# Production stage
-FROM node:18-alpine
-
+# Set working directory
 WORKDIR /app
 
+# Copy package files and install dependencies
 COPY package*.json ./
-COPY tsconfig*.json ./
+RUN npm install
 
-RUN npm install -g @nestjs/cli && \
-    npm install
+# Copy the rest of the source code
+COPY . .
 
-COPY --from=build /usr/src/app/dist ./dist
-
+# Expose the backend port
 EXPOSE 3000
 
-CMD ["npm", "run", "start:dev"] 
+# Default command
+CMD ["npm", "run", "start:dev"]
