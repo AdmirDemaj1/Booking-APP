@@ -1,16 +1,19 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+
 import './App.css'
 import DriverMap from './components/DriverMap'
+import UnassignedJourneys from './components/UnassignedJourneys';
 
 function App() {
-  const [count, setCount] = useState(0)
 
   return (
-    <>
-  <DriverMap/>
-    </>
+    <Router>
+    <Routes>
+      <Route path="/" element={<DriverMap />} />
+      <Route path="/driver-map" element={<DriverMap />} />
+      <Route path="/unassigned-journeys" element={<UnassignedJourneys />} />
+    </Routes>
+  </Router>
   )
 }
 

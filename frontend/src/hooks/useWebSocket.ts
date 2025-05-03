@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { io } from "socket.io-client";
+import { UnassignedJourney } from "../types/types"; // Import the type
 
-const useWebSocket = (onNewJourney: (journey: any) => void) => {
+const useWebSocket = (onNewJourney: (journey: UnassignedJourney) => void) => {
   useEffect(() => {
     const socket = io(import.meta.env.VITE_API_URL);
 
@@ -9,7 +10,7 @@ const useWebSocket = (onNewJourney: (journey: any) => void) => {
       console.log("Connected to WebSocket server");
     });
 
-    socket.on("newUnassignedJourney", (journey) => {
+    socket.on("newUnassignedJourney", (journey: UnassignedJourney) => {
       console.log("New unassigned journey received:", journey);
       onNewJourney(journey);
     });
