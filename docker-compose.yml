@@ -1,5 +1,4 @@
 version: '3.8'
-
 services:
   db:
     image: postgres:14
@@ -28,18 +27,24 @@ services:
       - db
 
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_HOST=db
-      - DATABASE_PORT=5432
-      - DATABASE_USER=postgres
-      - DATABASE_PASSWORD=postgres
-      - DATABASE_NAME=booking_api
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgres
+      DATABASE_NAME: booking_api
+    command: npm run start:dev
     depends_on:
-      db:
-        condition: service_healthy
+      - db
+
 
   frontend:
     build: ./frontend
@@ -58,4 +63,4 @@ services:
       - backend
 
 volumes:
-  postgres_data: 
+  postgres_data:
