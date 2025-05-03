@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { GoogleMap, useLoadScript, InfoWindow, Marker } from '@react-google-maps/api';
 import axios from 'axios';
+import useWebSocket from '../hooks/useWebSocket';
 
 interface Driver {
   id: string;
@@ -52,6 +53,10 @@ const DriverMap: React.FC = () => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [unassignedJourneys, setUnassignedJourneys] = useState<any[]>([]);
+
+  console.log("unassignedJourneys", unassignedJourneys);
+
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
     libraries,
@@ -61,6 +66,13 @@ const DriverMap: React.FC = () => {
     console.log("Map loaded");
     setMap(map);
   }, []);
+
+  useWebSocket((newJourney) => {
+
+    console.log("New unassigned journey received:", newJourney);
+    
+    setUnassignedJourneys((prev) => [...prev, newJourney]);
+  });
 
   const onUnmount = useCallback(() => {
     setMap(null);
