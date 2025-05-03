@@ -7,12 +7,20 @@ export class UnassignedJourneyController {
   constructor(private readonly service: UnassignedJourneyService) {}
 
   @Post()
-  create(@Body() dto: CreateUnassignedJourneyDto) {
-    return this.service.create(dto);
+  async create(@Body() dto: CreateUnassignedJourneyDto) {
+    try {
+      console.log('Creating unassigned journey', dto);
+      return await this.service.create(dto);
+    } catch (error) {
+      console.error('Error in creating unassigned journey:', error);
+      throw error;
+    }
   }
 
   @Get()
   findAll() {
+    console.log('Fetching all unassigned journeys');
+
     return this.service.findAll();
   }
 

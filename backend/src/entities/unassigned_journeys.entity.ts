@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  JoinColumn,
+  OneToOne,
+} from 'typeorm';
 import { Journey } from './journey.entity';
 
 @Entity('unassigned_journeys')
@@ -6,7 +13,7 @@ export class UnassignedJourney {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Journey, { onDelete: 'CASCADE' })
+  @OneToOne(() => Journey, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'journeyId' })
   journey: Journey;
 
