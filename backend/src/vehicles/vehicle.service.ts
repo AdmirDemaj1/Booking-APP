@@ -16,11 +16,27 @@ export class VehicleService {
   }
 
   async findAll(): Promise<Vehicle[]> {
-    return this.vehicleRepository.find();
+    return this.vehicleRepository.find({ relations: ['driver'],select: {
+      driver: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        phoneNumber: true,
+        driverStatus: true,
+      },
+    }, });
   }
 
   async findOne(id: string): Promise<Vehicle | null> {
-    return this.vehicleRepository.findOne({ where: { id } });
+    return this.vehicleRepository.findOne({ where: { id }, relations: ['driver'],select: {
+      driver: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        phoneNumber: true,
+        driverStatus: true,
+      },
+    } });
   }
 
   async update(id: string, vehicleData: Partial<Vehicle>): Promise<Vehicle | null> {
