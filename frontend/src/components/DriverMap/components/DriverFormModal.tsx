@@ -36,7 +36,7 @@ const DriverFormModal: React.FC<DriverFormModalProps> = ({
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      zIndex: 1000
+      zIndex: 10000
     }}>
       <div className="modal-content" style={{
         backgroundColor: 'white',

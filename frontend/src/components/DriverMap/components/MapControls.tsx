@@ -1,4 +1,6 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
+import  Button  from '@mui/material/Button';
+import  Stack  from '@mui/material/Stack';
 
 interface MapControlsProps {
   isAddingJourney: boolean;
@@ -14,20 +16,19 @@ const MapControls: React.FC<MapControlsProps> = ({
   toggleAddingDriver
 }) => {
   return (
-    <div className="map-controls" style={{ 
-      marginBottom: '10px', 
-      position: 'absolute', 
-      top: '10px', 
-      left: '10px', 
-      zIndex: 10,
-      backgroundColor: 'rgba(255,255,255,0.8)',
-      padding: '10px',
-      borderRadius: '4px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '10px'
-    }}>
-      <button 
+    <Stack
+         spacing={1}
+         sx={{
+           position: 'absolute',
+           top: '25px',
+           left: '10px',
+           zIndex: 10,
+           backgroundColor: 'rgba(255,255,255,0.8)',
+           padding: '5px',
+           borderRadius: '4px',
+         }}
+       >
+      <Button 
         onClick={toggleAddingJourney}
         disabled={isAddingDriver}
         style={{
@@ -41,9 +42,9 @@ const MapControls: React.FC<MapControlsProps> = ({
         }}
       >
         {isAddingJourney ? 'Cancel Journey' : 'Add New Journey'}
-      </button>
+      </Button>
       
-      <button 
+      <Button 
         onClick={toggleAddingDriver}
         disabled={isAddingJourney}
         style={{
@@ -57,7 +58,7 @@ const MapControls: React.FC<MapControlsProps> = ({
         }}
       >
         {isAddingDriver ? 'Cancel Driver' : 'Add New Driver'}
-      </button>
+      </Button>
       
       {isAddingJourney && (
         <p style={{ margin: '5px 0', color: '#666' }}>
@@ -70,7 +71,7 @@ const MapControls: React.FC<MapControlsProps> = ({
           Click on the map to place a new driver
         </p>
       )}
-    </div>
+    </Stack>
   );
 };
 
